@@ -399,12 +399,28 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="MissingConstraints" />
 
+    <TextView
+        android:id="@+id/totalAcumulado"
+        android:layout_width="160dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="756dp"
+        android:background="@drawable/precio_a_pedir"
+        android:fontFamily="@font/kat"
+        android:gravity="center"
+        android:textColor="@color/black"
+        android:textSize="25sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="MissingConstraints" />
+
     <Button
         android:id="@+id/cancelar"
         android:layout_width="120dp"
         android:layout_height="33dp"
-        android:layout_marginStart="145dp"
-        android:layout_marginTop="758dp"
+        android:layout_marginStart="256dp"
+        android:layout_marginTop="764dp"
         android:background="@drawable/btn_restar_producto"
         android:fontFamily="@font/kat"
         android:gravity="center"

@@ -81,7 +81,17 @@ public class EleccionMesa extends AppCompatActivity {
                     for (int i = 0; i < mesas.size() && i < BOTONES.size(); i++) {
                         Mesa mesa = mesas.get(i);
                         Button boton = BOTONES.get(i);
-                        boton.setText(mesa.getNombre());
+
+                        // Nombre de la mesa tal cual viene en la base de datos (Ej: "Mesa1")
+                        String nombreMesa = mesa.getNombre();
+
+                        // Formatea el nombre para poner un espacio
+                        String nombreFormateado = nombreMesa.replaceAll("(?i)^(mesa)\\s*(\\d+)$", "$1 $2")
+                                .replaceAll("(?<=\\D)(?=\\d)", " ");
+
+                        boton.setText(nombreFormateado); // enseña en la UI el formateado
+                        boton.setTag(nombreMesa); // guarda original para la API
+
 
                         if (mesa.isOcupada()) {
                             boton.setBackground(getResources().getDrawable(R.drawable.mesa_ocupada));
@@ -100,19 +110,16 @@ public class EleccionMesa extends AppCompatActivity {
 
 
         for (Button boton : BOTONES) {
-
-            // Acción al pulsar un botón de mesa
             boton.setOnClickListener(v -> {
-                String nombreMesa = boton.getText().toString();
-                Mesa nuevaMesa = new Mesa(nombreMesa, true, false);
+                String nombreMesaParaApi = (String) boton.getTag(); // nombre original ("Mesa1")
+                Mesa nuevaMesa = new Mesa(nombreMesaParaApi, true, false);
 
-                // Actualizar el estado de la mesa en la base de datos
-                api.ocuparMesa(nombreMesa, nuevaMesa).enqueue(new Callback<Mesa>() {
+                api.ocuparMesa(nombreMesaParaApi, nuevaMesa).enqueue(new Callback<Mesa>() {
                     @Override
                     public void onResponse(Call<Mesa> call, Response<Mesa> response) {
                         if (response.isSuccessful()) {
                             Intent intent = new Intent(EleccionMesa.this, Carta.class);
-                            intent.putExtra("nombreMesa", nombreMesa);
+                            intent.putExtra("nombreMesa", nombreMesaParaApi);
                             startActivity(intent);
                         }
                     }

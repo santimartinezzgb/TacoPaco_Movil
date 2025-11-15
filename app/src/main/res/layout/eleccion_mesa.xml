@@ -19,20 +19,19 @@
         android:background="@mipmap/volver"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.555"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.507"
         tools:ignore="MissingConstraints" />
 
     <Button
         android:id="@+id/actualizar"
         android:layout_width="30dp"
         android:layout_height="30dp"
-        android:layout_marginStart="301dp"
-        android:layout_marginEnd="80dp"
-        android:layout_marginBottom="701dp"
+        android:layout_marginStart="336dp"
+        android:layout_marginTop="40dp"
         android:background="@mipmap/refresh"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="MissingConstraints" />

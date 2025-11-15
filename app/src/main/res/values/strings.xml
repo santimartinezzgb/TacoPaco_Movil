@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">TacoPaco</string>
-    <string name="mesa_1">MESA 1</string>
-    <string name="mesa_2">MESA 2</string>
-    <string name="mesa_3">MESA 3</string>
-    <string name="mesa_4">MESA 4</string>
-    <string name="mesa_5">MESA 5</string>
+    <string name="app_name" translatable="false">TacoPaco</string>
+    <string name="mesa_1" translatable="false">MESA 1</string>
+    <string name="mesa_2" translatable="false">MESA 2</string>
+    <string name="mesa_3" translatable="false">MESA 3</string>
+    <string name="mesa_4" translatable="false">MESA 4</string>
+    <string name="mesa_5" translatable="false">MESA 5</string>
 </resources>

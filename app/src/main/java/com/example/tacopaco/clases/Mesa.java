@@ -5,8 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Mesa {
     private String nombre;
     private boolean ocupada;
-    public boolean a_pagar;
-
+    private boolean a_pagar;
 
     public Mesa(String nombre, boolean ocupada, boolean a_pagar) {
         this.nombre = nombre;
@@ -14,13 +13,13 @@ public class Mesa {
         this.a_pagar = a_pagar;
     }
 
-    public String getNombre() {
-        return nombre;
-    }
 
-    public boolean isOcupada() {
-        return ocupada;
-    }
-    public boolean mesaPagada() {return a_pagar;}
+    public boolean isOcupada() { return ocupada; }
+
+    public boolean mesaPagada() { return a_pagar; }
+    
+
+    public String getNombre() { return nombre; }
+
 
 }

@@ -28,6 +28,7 @@ import retrofit2.Response;
 
 public class Carta extends AppCompatActivity {
 
+    @SuppressLint("DefaultLocale")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,8 +54,14 @@ public class Carta extends AppCompatActivity {
         Button pedir = findViewById(R.id.pagar);
         Button btn_cancelar_pagar = findViewById(R.id.cancelar);
 
-        // Texto del precio total
+        // Precio del pedido actual
         TextView precio = findViewById(R.id.precio);
+
+        // Precio acumulado del global de pedidos
+        TextView totalAcumulado = findViewById(R.id.totalAcumulado);
+
+        // Mostrar el total de pedidos acumulados en pantalla ( formateando decimales )
+        totalAcumulado.setText(String.format("Total: %.2f €", acumuladoMesa.get()));
 
         // Precios de los productos
         double precioTacos = 7.99;
@@ -109,19 +116,21 @@ public class Carta extends AppCompatActivity {
         final AtomicReference<Double>[] totalActual = new AtomicReference[]{new AtomicReference<>(0.0)};
 
         // Runnable para actualizar el total del pedido
-        // Runnable: Sirve para definir un bloque de código que se puede ejecutar en cualquier momento.
+        // Runnable: Sirve para definir un bloque de código que se puede ejecutar en cualquier momento. (Análogo a una función)
         Runnable actualizarTotal = () -> {
             double total = (totalTacos.get() * precioTacos)
                     + (totalNachos.get() * precioNachos)
                     + (totalQuesadillas.get() * precioQuesadillas)
                     + (totalTamales.get() * precioTamales)
                     + (totalBurritos.get() * precioBurritos);
+
+            // Muestra en pantalla el precio de lo que está costando el pedido actual
             totalActual[0].set(total);
             precio.setText(String.format("Precio: %.2f €", total));
         };
 
         // Tacos
-        sumarTacos.setOnClickListener(v -> {
+        sumarTacos.setOnClickListener(v -> { // Añadir tacos al pedido, con máximo de 10
             if (totalTacos.get() < 10) {
                 totalTacos.getAndIncrement();
                 cantidadTacos.setText(String.valueOf(totalTacos.get()));
@@ -130,7 +139,7 @@ public class Carta extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "Cantidad máxima de tacos alcanzada", Toast.LENGTH_SHORT).show();
             }
         });
-        restarTacos.setOnClickListener(v -> {
+        restarTacos.setOnClickListener(v -> { // Restar tacos del pedido, mínimo de 0
             if (totalTacos.get() > 0) {
                 totalTacos.getAndDecrement();
                 cantidadTacos.setText(String.valueOf(totalTacos.get()));
@@ -215,20 +224,20 @@ public class Carta extends AppCompatActivity {
 
         // PULSAR PEDIR: añadir el total al acumulado de la mesa
         pedir.setOnClickListener(v -> {
+
+            // Extrae el valor del pedido actual en un double (número con 2 decimales)
             double totalPedido = totalActual[0].get();
 
-            // Si el pedido no está vacío
-            if (totalPedido > 0) {
-                // Actualizar el acumulado de la mesa
+            if (totalPedido > 0) { // Control de pedido válido
+
+                // Añadir solo una vez el total del pedido al acumulado de la mesa
                 acumuladoMesa.updateAndGet(v1 -> v1 + totalPedido);
 
-                // Mensaje de confirmación
-                Toast.makeText(getApplicationContext(),
-                        "Pedido añadido. Subtotal mesa: " + String.format("%.2f", acumuladoMesa.get()) + " €",
-                        Toast.LENGTH_SHORT).show();
+                // actualizar la UI del total acumulado
+                totalAcumulado.setText(String.format("Total: %.2f €", acumuladoMesa.get()));
 
-                // Limpiar cantidades en UI
-                precio.setText("0 €");
+                // Limpiar cantidades en UI y resetar el pedido actual
+                precio.setText(String.format("Precio: %.2f €", 0.0));
                 totalBurritos.set(0);
                 cantidadBurrito.setText("0");
                 totalNachos.set(0);
@@ -245,25 +254,31 @@ public class Carta extends AppCompatActivity {
                 btn_cancelar_pagar.setText("PAGAR");
                 btn_cancelar_pagar.setBackgroundColor(getResources().getColor(R.color.blue));
                 btn_cancelar_pagar.setTextColor(getResources().getColor(R.color.white));
-
-            } else { // Pedido vacío
+            } else {
+                // Avisa de pedido vacío
                 Toast.makeText(getApplicationContext(), "Pedido vacío", Toast.LENGTH_SHORT).show();
             }
         });
 
-        // PULSAR CANCELAR/PAGAR
+
+        // PULSAR CANCELAR/PAGAR: Un mismo botón cambia sus propiedades
         btn_cancelar_pagar.setOnClickListener(v -> {
 
             // Ver si el botón está en modo PAGAR o CANCELAR
             String texto = btn_cancelar_pagar.getText().toString().trim();
 
-            // PAGAR: crear pedido, guardar en API
+            // Si el texto del botón es "pagar", este guarda el pedido
             if ("PAGAR".equals(texto)) {
+
+                // Guarda el acumulado total de los pedidos de una misma mesa
                 double totalComanda = acumuladoMesa.get();
 
                 // Si hay algo que pagar
                 if (totalComanda > 0) {
+                    // La mesa ocupada que tiene algo que pagar
                     Mesa mesaActual = new Mesa(nombreMesa, true, true);
+
+                    // Llama a la API interfaz de Android para marcar la mesa
                     api.ocuparMesa(nombreMesa, mesaActual).enqueue(new Callback<Mesa>() {
                         @Override
                         public void onResponse(Call<Mesa> call, Response<Mesa> response) {
@@ -275,36 +290,25 @@ public class Carta extends AppCompatActivity {
                             t.printStackTrace();
                         }
                     });
+
+                    // Crea el pedido con los datos finales d ela mesa (pedido total y nombre de la mesa)
                     Pedido pedidoFinal = new Pedido(totalComanda, mesaActual);
 
-                    // Guardar el pedido en la API
+                    // Guarda el pedido en la API, que lo pasa a la db
                     api.guardarPedido(pedidoFinal).enqueue(new Callback<Pedido>() {
                         @Override
                         public void onResponse(Call<Pedido> call, Response<Pedido> response) {
                             if (response.isSuccessful()) {
-                                Toast.makeText(getApplicationContext(),
-                                        "Pago realizado: " + String.format("%.2f", totalComanda) + " €",
-                                        Toast.LENGTH_SHORT).show();
 
-                                // // Liberar la mesa después del pago
-                                // if (nombreMesa != null) {
-                                //     Mesa mesaLibre = new Mesa(nombreMesa, false, 0.0);
-                                //     api.ocuparMesa(nombreMesa, mesaLibre).enqueue(new Callback<Mesa>() {
-                                //         @Override
-                                //         public void onResponse(Call<Mesa> call, Response<Mesa> response) { }
-//
-                                //         @Override
-                                //         public void onFailure(Call<Mesa> call, Throwable t) {
-                                //             t.printStackTrace();
-                                //         }
-                                //     });
-                                // }
+                                // Mensaje de pago realizado con el precio total formateado
+                                Toast.makeText(getApplicationContext(), "Pago realizado: " + String.format("%.2f", totalComanda) + " €", Toast.LENGTH_SHORT).show();
 
                                 // Resetea el acumulador y vuelve a la elección de mesa
                                 acumuladoMesa.set(0.0);
+
+                                // Resetea también el precio que ve el usuario en pantalla
+                                totalAcumulado.setText(String.format("Total: %.2f €", acumuladoMesa.get()));
                                 startActivity(new Intent(Carta.this, EleccionMesa.class));
-                            } else {
-                                Toast.makeText(getApplicationContext(), "Error al procesar el pago", Toast.LENGTH_SHORT).show();
                             }
                         }
 
@@ -314,7 +318,7 @@ public class Carta extends AppCompatActivity {
                         }
                     });
                 } else {
-                    Toast.makeText(getApplicationContext(), "No hay pedidos para pagar", Toast.LENGTH_SHORT).show();
+
                 }
             } else {
                 // CANCELAR: liberar mesa y resetear acumulador
@@ -332,6 +336,8 @@ public class Carta extends AppCompatActivity {
                             t.printStackTrace();
                         }
                     });
+                } else {
+
                 }
 
                 // Resetea el acumulador y vuelve a elección de mesa
@@ -340,9 +346,5 @@ public class Carta extends AppCompatActivity {
                 startActivity(new Intent(Carta.this, EleccionMesa.class));
             }
         });
-
-
-
-
     }
 }
