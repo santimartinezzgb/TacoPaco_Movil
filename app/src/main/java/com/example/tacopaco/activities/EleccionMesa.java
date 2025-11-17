@@ -78,6 +78,7 @@ public class EleccionMesa extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     List<Mesa> mesas = response.body();
 
+                    // Recorre las mesas y botones (Ya que a cada mesa se le asigna un botón)
                     for (int i = 0; i < mesas.size() && i < BOTONES.size(); i++) {
                         Mesa mesa = mesas.get(i);
                         Button boton = BOTONES.get(i);
@@ -85,7 +86,7 @@ public class EleccionMesa extends AppCompatActivity {
                         // Nombre de la mesa tal cual viene en la base de datos (Ej: "Mesa1")
                         String nombreMesa = mesa.getNombre();
 
-                        // Formatea el nombre para poner un espacio
+                        // Formatea el nombre para poner un espacio entre 'Mesa' y 'Su número'
                         String nombreFormateado = nombreMesa.replaceAll("(?i)^(mesa)\\s*(\\d+)$", "$1 $2")
                                 .replaceAll("(?<=\\D)(?=\\d)", " ");
 
@@ -94,6 +95,7 @@ public class EleccionMesa extends AppCompatActivity {
 
 
                         if (mesa.isOcupada()) {
+                            // Si la mesa está ocupada, cambia de aspecto
                             boton.setBackground(getResources().getDrawable(R.drawable.mesa_ocupada));
                             boton.setTextColor(getResources().getColor(R.color.white));
                             boton.setEnabled(false);
@@ -111,21 +113,29 @@ public class EleccionMesa extends AppCompatActivity {
 
         for (Button boton : BOTONES) {
             boton.setOnClickListener(v -> {
-                String nombreMesaParaApi = (String) boton.getTag(); // nombre original ("Mesa1")
+
+                // Nombre original en la base de datos ("Mesa1")
+                String nombreMesaParaApi = (String) boton.getTag();
+
+                // Instancia nueva mesa con el nombre de la mesa, y poniendo que está ocupada como True
                 Mesa nuevaMesa = new Mesa(nombreMesaParaApi, true, false);
 
-                api.ocuparMesa(nombreMesaParaApi, nuevaMesa).enqueue(new Callback<Mesa>() {
-                    @Override
-                    public void onResponse(Call<Mesa> call, Response<Mesa> response) {
-                        if (response.isSuccessful()) {
-                            Intent intent = new Intent(EleccionMesa.this, Carta.class);
-                            intent.putExtra("nombreMesa", nombreMesaParaApi);
-                            startActivity(intent);
-                        }
-                    }
+                // Llama a la instancia de api con el metodo ocupar mesa
+                api.ocuparMesa(nombreMesaParaApi, nuevaMesa)
+                        .enqueue(new Callback<>() {
+                        @Override
+                        public void onResponse(Call<Mesa> call, Response<Mesa> response) {
+                            if (response.isSuccessful()) {
 
-                    @Override
-                    public void onFailure(Call<Mesa> call, Throwable t) {
+                                // Pantalla cambia de activity: EleccionMesa -> Carta
+                                Intent intent = new Intent(EleccionMesa.this, Carta.class);
+                                intent.putExtra("nombreMesa", nombreMesaParaApi);
+                                startActivity(intent);
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<Mesa> call, Throwable t) {
                         t.printStackTrace();
                     }
                 });
